@@ -1,0 +1,30 @@
+name: Sinara reports reminder
+
+on:
+  schedule:
+    - cron: "0 8 * * 1"  # Понедельник 11:00 МСК
+    - cron: "0 8 * * 4"  # Четверг 11:00 МСК
+    - cron: "0 8 * * 5"  # Пятница 11:00 МСК
+  workflow_dispatch:
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send reminder
+        run: |
+          DOW=$(date -u +%u) # 1=Mon ... 7=Sun
+
+          if [ "$DOW" = "1" ]; then
+            MSG='@Поддержка Напоминание: опубликовать отчёты Банка Синара за ЧТ и ПТ прошлой недели.'
+          elif [ "$DOW" = "4" ]; then
+            MSG='@Поддержка Напоминание: опубликовать отчёт Банка Синара за ПН.'
+          elif [ "$DOW" = "5" ]; then
+            MSG='@Поддержка Напоминание: опубликовать отчёты Банка Синара за ВТ и СР.'
+          else
+            exit 0
+          fi
+
+          curl -X POST "https://api.pachca.com/webhooks/01KJ7BYM6ZW4VN90ZR9M4C4YTH" \
+            -H "Content-Type: application/json" \
+            -d "{\"message\":\"$MSG\"}"
