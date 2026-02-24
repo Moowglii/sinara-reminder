@@ -2,13 +2,14 @@ name: Sinara reports reminder
 
 on:
   schedule:
-    # 11:00 MSK = 08:00 UTC (GitHub cron в UTC)
+    # 11:00 MSK = 08:00 UTC (GitHub cron работает в UTC)
     - cron: "0 8 * * 1-5"
   workflow_dispatch:
 
 jobs:
   remind:
     runs-on: ubuntu-latest
+
     steps:
       - name: Send reminder
         env:
@@ -16,9 +17,36 @@ jobs:
         run: |
           set -euo pipefail
 
-          MSG="@Поддержка ТЕСТ: webhook Sinara работает"
+          # ТЕСТОВЫЙ режим — при ручном запуске всегда отправляем сообщение
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            MSG="@Поддержка ТЕСТ: webhook Sinara работает"
+          else
+            # Определяем день недели по Москве
+            DOW=$(TZ=Europe/Moscow date +%u)  # 1=Mon ... 7=Sun
+
+            if [ "$DOW" = "1" ]; then
+              MSG="@Поддержка Напоминание: опубликовать отчёты Банка Синара за ЧТ и ПТ прошлой недели."
+            elif [ "$DOW" = "4" ]; then
+              MSG="@Поддержка Напоминание: опубликовать отчёт Банка Синара за ПН."
+            elif [ "$DOW" = "5" ]; then
+              MSG="@Поддержка Напоминание: опубликовать отчёты Банка Синара за ВТ и СР."
+            else
+              exit 0
+            fi
+          fi
+
+          # Формируем JSON безопасно через jq
+          PAYLOAD=$(jq -n \
+            --arg entity_type "chat" \
+            --argjson entity_id 33740223 \
+            --arg content "$MSG" \
+            '{entity_type:$entity_type, entity_id:$entity_id, content:$content}'
+          )
+
+          echo "Отправляем:"
+          echo "$PAYLOAD"
 
           curl --fail-with-body -sS -X POST "https://api.pachca.com/api/shared/v1/messages" \
             -H "Authorization: Bearer $PACHCA_TOKEN" \
             -H "Content-Type: application/json; charset=utf-8" \
-            -d "{\"entity_type\":\"chat\",\"entity_id\":33740223,\"content\":\"$MSG\"}"
+            -d "$PAYLOAD"
