@@ -33,7 +33,7 @@ jobs:
 
           # Сбор JSON без ручного экранирования
           PAYLOAD="$(jq -nc \
-            --arg entity_type "chat" \
+            --arg entity_type "channel" \
             --argjson entity_id "$CHAT_ID" \
             --arg content "$MSG" \
             '{entity_type:$entity_type, entity_id:$entity_id, content:$content}')"
