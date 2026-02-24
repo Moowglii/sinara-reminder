@@ -2,41 +2,51 @@ name: Sinara reports reminder
 
 on:
   schedule:
-    # 11:00 MSK = 08:00 UTC (GitHub cron в UTC)
-    - cron: "0 8 * * 1-5"
+    # GitHub cron is UTC. 11:00 MSK = 08:00 UTC
+    - cron: "0 8 * * 1"  # Monday
+    - cron: "0 8 * * 4"  # Thursday
+    - cron: "0 8 * * 5"  # Friday
   workflow_dispatch:
 
 jobs:
   remind:
     runs-on: ubuntu-latest
-
     steps:
       - name: Send reminder
         env:
           PACHCA_TOKEN: ${{ secrets.PACHCA_TOKEN }}
-          ENTITY_ID: "14904221"
+          CHAT_ID: "33740223"
         run: |
           set -euo pipefail
 
-          MSG="@Поддержка ТЕСТ: webhook Sinara работает"
+          DOW=$(TZ=Europe/Moscow date +%u) # 1=Mon ... 7=Sun
 
-          # Попробуем сначала как chat, потом как channel (чтобы сразу понять что принимает API)
-          for ENTITY_TYPE in chat channel; do
-            echo "=== TRY entity_type=$ENTITY_TYPE entity_id=$ENTITY_ID ==="
+          if [ "$DOW" = "1" ]; then
+            MSG="@Поддержка Напоминание: опубликовать отчёты Банка Синара за ЧТ и ПТ прошлой недели."
+          elif [ "$DOW" = "4" ]; then
+            MSG="@Поддержка Напоминание: опубликовать отчёт Банка Синара за ПН."
+          elif [ "$DOW" = "5" ]; then
+            MSG="@Поддержка Напоминание: опубликовать отчёты Банка Синара за ВТ и СР."
+          else
+            echo "No reminder for this day"
+            exit 0
+          fi
 
-            PAYLOAD="$(jq -nc \
-              --arg entity_type "$ENTITY_TYPE" \
-              --argjson entity_id "$ENTITY_ID" \
-              --arg content "$MSG" \
-              '{entity_type:$entity_type, entity_id:$entity_id, content:$content}')"
+          # ВАЖНО: API ждёт обёртку "message"
+          payload=$(cat <<JSON
+          {
+            "message": {
+              "entity_type": "discussion",
+              "entity_id": ${CHAT_ID},
+              "content": "${MSG}"
+            }
+          }
+          JSON
+          )
 
-            echo "Отправляем payload: $PAYLOAD"
+          echo "Sending payload: $payload"
 
-            RESP="$(curl -sS -X POST "https://api.pachca.com/api/shared/v1/messages" \
-              -H "Authorization: Bearer $PACHCA_TOKEN" \
-              -H "Content-Type: application/json; charset=utf-8" \
-              --data-binary "$PAYLOAD" \
-              -w "\nHTTP_STATUS:%{http_code}\n")"
-
-            echo "$RESP"
-          done
+          curl --fail-with-body -sS -X POST "https://api.pachca.com/api/shared/v1/messages" \
+            -H "Authorization: Bearer ${PACHCA_TOKEN}" \
+            -H "Content-Type: application/json; charset=utf-8" \
+            -d "$payload"
