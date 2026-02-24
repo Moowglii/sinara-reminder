@@ -2,7 +2,9 @@ name: Sinara reports reminder
 
 on:
   schedule:
-    - cron: '0 8 * * 1-5'
+    - cron: "0 8 * * 1"  # Понедельник 11:00 МСК
+    - cron: "0 8 * * 4"  # Четверг 11:00 МСК
+    - cron: "0 8 * * 5"  # Пятница 11:00 МСК
   workflow_dispatch:
 
 jobs:
@@ -23,6 +25,6 @@ jobs:
             exit 0
           fi
 
-          curl -X POST "https://api.pachca.com/webhooks/01KJ7DXKMBGYJQZ3C530QQ61Y2" \
+          curl --fail-with-body -sS -X POST "https://api.pachca.com/webhooks/01KJ7DXKMBGYJQZ3C530QQ61Y2" \
             -H "Content-Type: application/json" \
             -d "{\"message\":\"$MSG\"}"
