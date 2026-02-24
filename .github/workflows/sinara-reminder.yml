@@ -40,11 +40,21 @@ jobs:
 
           echo "Отправляем payload: $PAYLOAD"
 
-          curl --fail-with-body -sS -X POST "https://api.pachca.com/api/shared/v1/messages" \
+          PAYLOAD="$(jq -nc \
+            --arg entity_type "chat" \
+            --argjson entity_id "$CHAT_ID" \
+            --arg content "$MSG" \
+            '{entity_type:$entity_type, entity_id:$entity_id, content:$content}')"
+
+          echo "Отправляем payload: $PAYLOAD"
+
+          RESP="$(curl -sS -X POST "https://api.pachca.com/api/shared/v1/messages" \
             -H "Authorization: Bearer $PACHCA_TOKEN" \
             -H "Content-Type: application/json; charset=utf-8" \
-            --data-binary "$PAYLOAD"
-          curl --fail-with-body -sS -X POST "https://api.pachca.com/api/shared/v1/messages" \
-            -H "Authorization: Bearer $PACHCA_TOKEN" \
-            -H "Content-Type: application/json; charset=utf-8" \
-            -d "$PAYLOAD"
+            --data-binary "$PAYLOAD" \
+            -w "\nHTTP_STATUS:%{http_code}\n")"
+
+          echo "$RESP"
+
+# если вдруг не 2xx — завалим job
+          echo "$RESP" | grep -q "HTTP_STATUS:2" || exit 1
