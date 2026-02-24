@@ -13,7 +13,7 @@ on:
       chat_id:
         description: "Pachca discussion(chat) id"
         required: false
-        default: "33740223"
+        default: "34090852"
 
 jobs:
   remind:
@@ -22,7 +22,7 @@ jobs:
       - name: Send reminder to Pachca
         env:
           PACHCA_TOKEN: ${{ secrets.PACHCA_TOKEN }}
-          CHAT_ID: ${{ github.event.inputs.chat_id || '33740223' }}
+          CHAT_ID: ${{ github.event.inputs.chat_id || '34090852' }}
           FORCE: ${{ github.event.inputs.force || 'false' }}
         run: |
           set -euo pipefail
