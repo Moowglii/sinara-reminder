@@ -23,6 +23,6 @@ jobs:
             exit 0
           fi
 
-          curl -X POST "https://api.pachca.com/webhooks/01KJ7BYM6ZW4VN90ZR9M4C4YTH" \
+          curl -X POST "https://api.pachca.com/webhooks/01KJ7DXKMBGYJQZ3C530QQ61Y2" \
             -H "Content-Type: application/json" \
             -d "{\"message\":\"$MSG\"}"
