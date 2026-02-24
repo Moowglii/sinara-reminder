@@ -2,9 +2,7 @@ name: Sinara reports reminder
 
 on:
   schedule:
-    - cron: "0 8 * * 1"  # Понедельник 11:00 МСК
-    - cron: "0 8 * * 4"  # Четверг 11:00 МСК
-    - cron: "0 8 * * 5"  # Пятница 11:00 МСК
+    - cron: '0 8 * * 1-5'
   workflow_dispatch:
 
 jobs:
