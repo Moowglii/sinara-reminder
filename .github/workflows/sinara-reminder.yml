@@ -14,7 +14,7 @@ jobs:
       - name: Send reminder
         env:
           PACHCA_TOKEN: ${{ secrets.PACHCA_TOKEN }}
-          ENTITY_ID: "33740223"
+          ENTITY_ID: "14904221"
         run: |
           set -euo pipefail
 
