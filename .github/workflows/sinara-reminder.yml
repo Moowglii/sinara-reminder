@@ -1,15 +1,19 @@
 name: Sinara reports reminder
 
 on:
-  # 11:00 MSK = 08:00 UTC
   schedule:
-    - cron: "0 8 * * 1,4,5"   # Mon, Thu, Fri
+    # 11:00 MSK = 08:00 UTC
+    - cron: "0 8 * * 1-5"
   workflow_dispatch:
     inputs:
       force:
-        description: "Отправить тест сейчас (игнорируя день недели)"
+        description: "Send test message regardless of day"
         required: false
         default: "false"
+      chat_id:
+        description: "Pachca discussion(chat) id"
+        required: false
+        default: "33740223"
 
 jobs:
   remind:
@@ -18,8 +22,8 @@ jobs:
       - name: Send reminder to Pachca
         env:
           PACHCA_TOKEN: ${{ secrets.PACHCA_TOKEN }}
-          CHAT_ID: "33740223"
-          FORCE: ${{ github.event.inputs.force }}
+          CHAT_ID: ${{ github.event.inputs.chat_id || '33740223' }}
+          FORCE: ${{ github.event.inputs.force || 'false' }}
         run: |
           set -euo pipefail
 
@@ -39,7 +43,6 @@ jobs:
           echo "Sending to discussion(chat) id=${CHAT_ID}"
           echo "Text: ${TEXT}"
 
-          # ВАЖНО: entity_id внутри message, entity_type = discussion
           curl --fail-with-body -sS -X POST "https://api.pachca.com/api/shared/v1/messages" \
             -H "Authorization: Bearer ${PACHCA_TOKEN}" \
             -H "Content-Type: application/json" \
