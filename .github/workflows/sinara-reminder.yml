@@ -2,9 +2,8 @@ name: Sinara reports reminder
 
 on:
   schedule:
-    - cron: "0 8 * * 1"  # Понедельник 11:00 МСК
-    - cron: "0 8 * * 4"  # Четверг 11:00 МСК
-    - cron: "0 8 * * 5"  # Пятница 11:00 МСК
+    # 11:00 MSK = 08:00 UTC (GitHub cron в UTC)
+    - cron: "0 8 * * 1-5"
   workflow_dispatch:
 
 jobs:
@@ -12,19 +11,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send reminder
+        env:
+          PACHCA_TOKEN: ${{ secrets.PACHCA_TOKEN }}
         run: |
-          DOW=$(date -u +%u) # 1=Mon ... 7=Sun
+          DOW=$(TZ=Europe/Moscow date +%u)  # 1=Mon ... 7=Sun
 
           if [ "$DOW" = "1" ]; then
-            MSG='тест'
+            MSG="@Поддержка Напоминание: опубликовать отчёты Банка Синара за ЧТ и ПТ прошлой недели."
           elif [ "$DOW" = "4" ]; then
-            MSG='тест'
+            MSG="@Поддержка Напоминание: опубликовать отчёт Банка Синара за ПН."
           elif [ "$DOW" = "5" ]; then
-            MSG='тест'
+            MSG="@Поддержка Напоминание: опубликовать отчёты Банка Синара за ВТ и СР."
           else
             exit 0
           fi
 
-          curl --fail-with-body -sS -X POST "https://api.pachca.com/webhooks/01KJ7DXKMBGYJQZ3C530QQ61Y2" \
-            -H "Content-Type: application/json" \
-            -d "{\"message\":\"$MSG\"}"
+          curl --fail-with-body -sS -X POST "https://api.pachca.com/api/shared/v1/messages" \
+            -H "Authorization: Bearer $PACHCA_TOKEN" \
+            -H "Content-Type: application/json; charset=utf-8" \
+            -d "{\"entity_type\":\"chat\",\"entity_id\":33740223,\"content\":\"$MSG\"}"
