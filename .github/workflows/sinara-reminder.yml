@@ -2,8 +2,8 @@ name: Sinara reports reminder
 
 on:
   schedule:
-    # 11:00 MSK = 08:00 UTC
-    - cron: "0 8 * * 1-5"
+    # 10:20 MSK = 07:20 UTC
+    - cron: "20 7 * * 1-5"
   workflow_dispatch:
     inputs:
       force:
