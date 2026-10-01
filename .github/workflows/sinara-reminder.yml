@@ -15,10 +15,22 @@ on:
         required: false
         default: "39076053"
 
+permissions:
+  actions: write
+
 jobs:
   remind:
     runs-on: ubuntu-latest
     steps:
+      # GitHub отключает schedule-воркфлоу после 60 дней без коммитов в репо;
+      # вызов enable из самого воркфлоу сбрасывает этот таймер.
+      - name: Keep schedule alive
+        if: github.event_name == 'schedule'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/sinara-reminder.yml/enable"
+
       - name: Send reminder to Pachca
         env:
           PACHCA_TOKEN: ${{ secrets.PACHCA_TOKEN }}
